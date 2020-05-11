@@ -12,3 +12,8 @@ Planned features off the top of my head: Language packs (UI solution for languag
 Thank you if you're reading this and have enjoyed the project. I hope you are patient with me and are understanding of the situation I'm in with the newfound spotlight on this project. 
 
 **Also, if anyone has experience with socket+express in node and notice places in my code where I can optimize for memory usage, please get in contact! (joseph.a.marchesi@gmail.com)**
+
+# Development Guide
+
+## Running Unit Tests
+The command `npm test` runs the test suite, located under the test subdirectory.
