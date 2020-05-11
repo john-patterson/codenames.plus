@@ -2,10 +2,11 @@
 ////////////////////////////////////////////////////////////////////////////
 
 // Express
-let express = require('express')
+let express = require('express');
+let [ Player ] = require('./player');
 
 // Create app
-let app = express()
+let app = express();
 
 //Set up server
 let server = app.listen(process.env.PORT || 2000, listen);
@@ -75,47 +76,6 @@ class Room {
     ROOM_LIST[this.room] = this
   }
 }
-
-// Player class
-// When players log in, they give a nickname, have a socket and a room they're trying to connect to
-class Player {
-  constructor(nickname, room, socket){
-    this.id = socket.id
-
-    // If someone in the room has the same name, append (1) to their nickname
-    let nameAvailable = false
-    let nameExists = false;
-    let tempName = nickname
-    let counter = 0
-    while (!nameAvailable){
-      if (ROOM_LIST[room]){
-        nameExists = false;
-        for (let i in ROOM_LIST[room].players){
-          if (ROOM_LIST[room].players[i].nickname === tempName) nameExists = true
-        }
-        if (nameExists) tempName = nickname + "(" + ++counter + ")"
-        else nameAvailable = true
-      }
-    }
-    this.nickname = tempName
-    this.room = room
-    this.team = 'undecided'
-    this.role = 'guesser'
-    this.timeout = 2100         // # of seconds until kicked for afk (35min)
-    this.afktimer = this.timeout       
-
-    // Add player to player list and add their socket to the socket list
-    PLAYER_LIST[this.id] = this
-  }
-
-  // When a player joins a room, evenly distribute them to a team
-  joinTeam(){
-    let numInRoom = Object.keys(ROOM_LIST[this.room].players).length
-    if (numInRoom % 2 === 0) this.team = 'blue'
-    else this.team = 'red'
-  }
-}
-
 
 // Server logic
 ////////////////////////////////////////////////////////////////////////////
@@ -266,7 +226,7 @@ function createRoom(socket, data){
         socket.emit('createResponse', {success:false, msg:'Enter A Valid Nickname'})
       } else {    // If the room name and nickname are both valid, proceed
         new Room(roomName, passName)                          // Create a new room
-        let player = new Player(userName, roomName, socket)   // Create a new player
+        let player = new Player(userName, roomName, socket, ROOM_LIST, PLAYER_LIST)   // Create a new player
         ROOM_LIST[roomName].players[socket.id] = player       // Add player to room
         player.joinTeam()                                     // Distribute player to team
         socket.emit('createResponse', {success:true, msg: ""})// Tell client creation was successful
@@ -297,7 +257,7 @@ function joinRoom(socket, data){
         // Tell client they need a valid nickname
         socket.emit('joinResponse', {success:false, msg:'Enter A Valid Nickname'})
       } else {  // If the room exists and the password / nickname are valid, proceed
-        let player = new Player(userName, roomName, socket)   // Create a new player
+        let player = new Player(userName, roomName, socket, ROOM_LIST, PLAYER_LIST)   // Create a new player
         ROOM_LIST[roomName].players[socket.id] = player       // Add player to room
         player.joinTeam()                                     // Distribute player to team
         socket.emit('joinResponse', {success:true, msg:""})   // Tell client join was successful
@@ -511,3 +471,5 @@ setInterval(()=>{
     }
   }
 }, 1000)
+
+exports = [ Player, ROOM_LIST ]
